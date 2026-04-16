@@ -9,13 +9,25 @@ jobs:
   ping-supabase:
     runs-on: ubuntu-latest
     steps:
-      - name: Llamar a la función para mantener activo
+      - name: Verificar y Limpiar URL
+        id: check
         run: |
-          # Limpiamos la URL por si tiene una barra al final
-          BASE_URL=$(echo "${{ secrets.SUPABASE_URL }}" | sed 's/\/$//')
+          # 1. Quitamos espacios y barras al final
+          RAW_URL="${{ secrets.SUPABASE_URL }}"
+          CLEAN_URL=$(echo "$RAW_URL" | xargs | sed 's/\/$//')
           
-          curl -i -X POST "$BASE_URL/rest/v1/rpc/mantener_proyecto_activo" \
+          # 2. Verificación básica (sin mostrar la URL completa)
+          if [ -z "$CLEAN_URL" ]; then
+            echo "::error::La URL de Supabase está VACÍA. Revisa tus Secrets."
+            exit 1
+          fi
+          
+          echo "URL_LIMPIA=$CLEAN_URL" >> $GITHUB_ENV
+          echo "La URL tiene una longitud de ${#CLEAN_URL} caracteres."
+
+      - name: Ejecutar Ping
+        run: |
+          curl -v -X POST "$URL_LIMPIA/rest/v1/rpc/mantener_proyecto_activo" \
             -H "apikey: ${{ secrets.SUPABASE_ANON_KEY }}" \
             -H "Authorization: Bearer ${{ secrets.SUPABASE_ANON_KEY }}" \
             -H "Content-Type: application/json"
-
