@@ -11,7 +11,11 @@ jobs:
     steps:
       - name: Llamar a la función para mantener activo
         run: |
-          curl -X POST '${{ secrets.SUPABASE_URL }}/rest/v1/rpc/mantener_proyecto_activo' \
+          # Limpiamos la URL por si tiene una barra al final
+          BASE_URL=$(echo "${{ secrets.SUPABASE_URL }}" | sed 's/\/$//')
+          
+          curl -i -X POST "$BASE_URL/rest/v1/rpc/mantener_proyecto_activo" \
             -H "apikey: ${{ secrets.SUPABASE_ANON_KEY }}" \
             -H "Authorization: Bearer ${{ secrets.SUPABASE_ANON_KEY }}" \
             -H "Content-Type: application/json"
+
